@@ -1,0 +1,14 @@
+{
+  "name": "brotato-web-multiplayer",
+  "version": "1.0.0",
+  "description": "Brotato v1.2.0.1 Web Port with Online & LAN Multiplayer (Room Browser + Direct Connect + Local Save Persistence)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:pck": "python tools/build_web_pck.py"
+  },
+  "dependencies": {
+    "brotato-web-multiplayer": "file:",
+    "ws": "^8.18.0"
+  }
+}
