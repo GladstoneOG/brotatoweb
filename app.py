@@ -70,16 +70,14 @@ def get_room_list_snapshot() -> list:
     return out
 
 
-app = FastAPI(title="Brotato Web Multiplayer Relay")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+    "Cache-Control": "no-store",
+}
 
 
-@app.get("/api/info")
 async def api_info():
     return JSONResponse(
         {
@@ -89,19 +87,17 @@ async def api_info():
             "roomCount": len(rooms),
             "rooms": get_room_list_snapshot(),
         },
-        headers={"Cache-Control": "no-store"},
+        headers=CORS_HEADERS,
     )
 
 
-@app.get("/api/rooms")
 async def api_rooms():
     return JSONResponse(
         {"rooms": get_room_list_snapshot()},
-        headers={"Cache-Control": "no-store"},
+        headers=CORS_HEADERS,
     )
 
 
-@app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     role = (ws.query_params.get("role") or "client").lower()
@@ -285,8 +281,10 @@ with gr.Blocks(title="Brotato Web Multiplayer Relay") as demo:
     rooms_json = gr.JSON(value=get_room_list_snapshot, label="Active Multiplayer Rooms")
     status_btn.click(fn=get_room_list_snapshot, outputs=rooms_json)
 
-app = gr.mount_gradio_app(app, demo, path="/")
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "7860"))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", "7860")), prevent_thread_lock=True)
+    demo.app.add_api_route("/api/info", api_info, methods=["GET", "OPTIONS"])
+    demo.app.add_api_route("/api/rooms", api_rooms, methods=["GET", "OPTIONS"])
+    demo.app.add_api_websocket_route("/ws", websocket_endpoint)
+    demo.block_thread()
+
