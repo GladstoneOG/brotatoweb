@@ -48,7 +48,7 @@ export class BrotatoRelayHub {
   getRoomListSnapshot() {
     const list = [];
     for (const [port, room] of this.rooms.entries()) {
-      if (!room.hostWs || room.hostWs.readyState !== WebSocket.READY_STATE_OPEN) continue;
+      if (!room.hostWs || !room.hostWs._isOpen) continue;
       const baseInfo = room.info || {};
       const memberCount = Number(baseInfo.member_count) || 1 + room.clients.size;
       const memberLimit = Number(baseInfo.member_limit) || 4;
@@ -83,6 +83,9 @@ export class BrotatoRelayHub {
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
       server.accept();
+      server._isOpen = true;
+      server.addEventListener("close", () => { server._isOpen = false; });
+      server.addEventListener("error", () => { server._isOpen = false; });
       this.handleSocket(server, url);
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -126,7 +129,7 @@ export class BrotatoRelayHub {
     if (role === "host") {
       let room = this.rooms.get(requestedRoom);
       let roomPort = requestedRoom;
-      if (room && room.hostWs && room.hostWs.readyState === WebSocket.READY_STATE_OPEN) {
+      if (room && room.hostWs && room.hostWs._isOpen) {
         roomPort = this.allocateRoomPort(requestedRoom);
         room = null;
       }
@@ -223,7 +226,7 @@ export class BrotatoRelayHub {
 
     // Client role
     const room = this.rooms.get(requestedRoom);
-    if (!room || !room.hostWs || room.hostWs.readyState !== WebSocket.READY_STATE_OPEN) {
+    if (!room || !room.hostWs || !room.hostWs._isOpen) {
       ws.send(makeFrame(FRAME_REJECTED, 0, 0, new TextEncoder().encode("Room not found or host offline")));
       ws.close(4004, "Room not found");
       return;

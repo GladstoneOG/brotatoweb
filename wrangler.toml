@@ -1,6 +1,7 @@
 name = "brotatoweb"
 main = "cloudflare_worker.js"
 compatibility_date = "2024-11-01"
+workers_dev = true
 
 [[durable_objects.bindings]]
 name = "RELAY_HUB"
