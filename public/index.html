@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Brotato Web Multiplayer (v1.2.0.1 + All DLCs)</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    :root {
+      --bg-dark: #121116;
+      --panel-bg: rgba(24, 22, 30, 0.92);
+      --border: rgba(255, 255, 255, 0.14);
+      --accent: #59b972;
+      --accent-hover: #6cd186;
+      --warn: #e6a23c;
+      --text: #f0eef6;
+      --muted: #a6a1b5;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      touch-action: none;
+    }
+    #canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      outline: none;
+    }
+    /* Top Overlay Bar */
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      min-height: 42px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 12px;
+      gap: 10px;
+      z-index: 100;
+      font-size: 13px;
+      transition: transform 0.2s ease;
+    }
+    #topbar.collapsed {
+      transform: translateY(-100%);
+    }
+    #show-bar-pill {
+      position: fixed;
+      top: 8px;
+      right: 12px;
+      z-index: 101;
+      background: rgba(24, 22, 30, 0.85);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+    }
+    #topbar.collapsed + #show-bar-pill {
+      display: block;
+    }
+    .bar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .brand img {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+    }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .badge.ok {
+      color: #8ce99a;
+      border-color: rgba(89, 185, 114, 0.4);
+      background: rgba(89, 185, 114, 0.14);
+    }
+    .badge.host {
+      color: #ffd43b;
+      border-color: rgba(255, 212, 59, 0.45);
+      background: rgba(255, 212, 59, 0.14);
+    }
+    input.bar-input {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 12px;
+      width: 125px;
+    }
+    input.bar-input:focus {
+      outline: 1px solid var(--accent);
+    }
+    button.bar-btn {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    button.bar-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+    button.bar-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #09130c;
+      font-weight: 700;
+    }
+    button.bar-btn.primary:hover {
+      background: var(--accent-hover);
+    }
+    /* Dropdown Drawer for Rooms & Saves */
+    .drawer {
+      position: fixed;
+      top: 46px;
+      right: 12px;
+      width: 440px;
+      max-width: calc(100vw - 24px);
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      z-index: 102;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      display: none;
+    }
+    .drawer.open {
+      display: block;
+    }
+    .drawer h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .drawer p {
+      margin: 4px 0 10px 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .room-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      margin-bottom: 10px;
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .room-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+    }
+    .room-row:last-child {
+      border-bottom: none;
+    }
+    /* Loading Screen */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #221f2b 0%, #0e0d12 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 90;
+      transition: opacity 0.35s ease;
+    }
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loading-card {
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      padding: 28px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    #loading-card img {
+      width: 76px;
+      height: 76px;
+      margin-bottom: 12px;
+    }
+    #loading-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    #loading-status {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #59b972, #8ce99a);
+      transition: width 0.15s linear;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="bar-group">
+      <div class="brand">
+        <img src="/favicon.png" alt="Brotato" />
+        <span>Brotato Web MP</span>
+      </div>
+      <span id="lan-ip-badge" class="badge" title="Share this URL with friends on your LAN">LAN: detecting...</span>
+      <span id="net-status-badge" class="badge">Offline / Solo</span>
+      <button id="copy-invite-btn" class="bar-btn" style="display:none;" onclick="copyInviteLink()">🔗 Copy Invite Link</button>
+    </div>
+
+    <div class="bar-group">
+      <label style="font-size:12px;color:var(--muted);">Name:</label>
+      <input id="player-name-input" class="bar-input" type="text" maxlength="20" placeholder="Your Nickname" onchange="savePlayerName(this.value)" />
+      <button class="bar-btn primary" onclick="toggleDrawer('rooms-drawer')">🌐 Rooms / IP (<span id="room-count-num">0</span>)</button>
+      <button class="bar-btn" onclick="toggleDrawer('saves-drawer')">💾 Local Profile &amp; Unlocks</button>
+      <span id="save-status-badge" class="badge ok" title="Your profile and unlocks are automatically saved to this computer">Saved to PC ✓</span>
+      <button class="bar-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
+      <button class="bar-btn" onclick="toggleTopbar(true)" title="Hide Top Bar (F2)">▲ Hide</button>
+    </div>
+  </div>
+  <button id="show-bar-pill" onclick="toggleTopbar(false)">▼ Menu / Rooms / Saves (F2)</button>
+
+  <!-- Rooms & Direct IP Drawer -->
+  <div id="rooms-drawer" class="drawer">
+    <h3>
+      <span>🌐 Online &amp; LAN Room Browser</span>
+      <button class="bar-btn" onclick="toggleDrawer('rooms-drawer')">✕</button>
+    </h3>
+    <p>
+      You can use the <b>in-game Lobby Browser / Create Lobby</b> buttons on Brotato's title screen, or manage connections right here:
+    </p>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="bar-btn primary" style="flex:1;" onclick="triggerHostRoom()">➕ Host New Room</button>
+      <button class="bar-btn" onclick="refreshRooms()">🔄 Refresh</button>
+    </div>
+    <div id="drawer-room-list" class="room-list">
+      <div style="color:var(--muted);text-align:center;padding:12px;">No active rooms found. Click "Host New Room" or "Create Lobby" in-game!</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Cloud Relay Server URL (for Split Cloud Hosting)</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <input id="relay-url-input" class="bar-input" style="flex:1;" type="text" placeholder="e.g. https://brotato-relay.onrender.com (blank = same host)" onchange="updateRelayServerUrl(this.value)" />
+        <button class="bar-btn" onclick="updateRelayServerUrl(document.getElementById('relay-url-input').value)">Save</button>
+      </div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Direct Connect (Server IP / Room Port)</div>
+      <div style="display:flex;gap:6px;">
+        <input id="target-server-input" class="bar-input" style="flex:1;" type="text" placeholder="Server IP (blank = active relay)" onchange="updateTargetServer(this.value)" />
+        <input id="target-port-input" class="bar-input" style="width:80px;" type="number" value="27462" placeholder="Port" />
+        <button class="bar-btn primary" onclick="triggerDirectJoin()">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Local Profile & Save Manager Drawer -->
+  <div id="saves-drawer" class="drawer">
+    <h3>
+      <span>💾 Local Profile &amp; Unlocks (Saved on Your PC)</span>
+      <button class="bar-btn" onclick="toggleDrawer('saves-drawer')">✕</button>
+    </h3>
+    <p id="save-details-text">
+      Your progress, unlocked characters, weapons, items, and settings are automatically saved in your browser's local storage &amp; IndexedDB on this computer.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="bar-btn primary" onclick="exportRawProfileSave()">⬇️ Export Steam-Compatible Save (save_v3_0.json)</button>
+      <button class="bar-btn" onclick="exportFullSaveBundle()">📦 Export Full Profile &amp; Settings Backup (.json)</button>
+      <button class="bar-btn" onclick="document.getElementById('import-file-input').click()">📂 Import Save File from PC (save_v3_0.json or Backup)</button>
+      <input id="import-file-input" type="file" accept=".json" style="display:none;" onchange="handleImportSaveFile(event)" />
+      <hr style="border:none;border-top:1px solid var(--border);width:100%;margin:4px 0;" />
+      <button class="bar-btn" style="border-color:var(--warn);color:var(--warn);" onclick="triggerUnlockAll()">🔓 Unlock All Characters, Items &amp; Difficulties</button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div id="loading-card">
+      <img src="/favicon.png" alt="Brotato" />
+      <div id="loading-title">Brotato v1.2.0.1 + Multiplayer</div>
+      <div id="loading-status">Initializing WebAssembly Engine...</div>
+      <div class="progress-track">
+        <div id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="canvas" oncontextmenu="event.preventDefault();" tabindex="0">
+    HTML5 canvas appears to be unsupported in the current browser.
+  </canvas>
+
+  <script src="/relay_config.js"></script>
+  <script src="/index.js"></script>
+  <script>
+    const SAVE_STORAGE_KEY = "brotato_web_save_bundle_v1";
+    const PLAYER_NAME_KEY = "brotato_web_player_name";
+    const TARGET_SERVER_KEY = "brotato_web_target_server";
+    const RELAY_URL_KEY = "brotato_web_relay_url";
+
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get("relay")) {
+      localStorage.setItem(RELAY_URL_KEY, urlParams.get("relay").trim());
+    }
+
+    window.BROTATO_PLAYER_NAME = localStorage.getItem(PLAYER_NAME_KEY) || ("Potato" + Math.floor(100 + Math.random() * 899));
+    window.BROTATO_TARGET_SERVER = localStorage.getItem(TARGET_SERVER_KEY) || "";
+    window.BROTATO_RELAY_URL = localStorage.getItem(RELAY_URL_KEY) || window.BROTATO_DEFAULT_RELAY || "";
+
+    document.getElementById("player-name-input").value = window.BROTATO_PLAYER_NAME;
+    document.getElementById("target-server-input").value = window.BROTATO_TARGET_SERVER;
+    document.getElementById("relay-url-input").value = window.BROTATO_RELAY_URL;
+
+    function applyRelayConfig(rawUrl) {
+      let clean = (rawUrl || "").trim().replace(/\/+$/, "");
+      if (clean.endsWith("/ws")) clean = clean.slice(0, -3);
+      window.BROTATO_RELAY_URL = clean;
+      if (!clean) {
+        window.BROTATO_WS_URL = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
+        return;
+      }
+      if (clean.startsWith("wss://") || clean.startsWith("ws://")) {
+        window.BROTATO_WS_URL = clean + "/ws";
+      } else if (clean.startsWith("https://")) {
+        window.BROTATO_WS_URL = "wss://" + clean.slice(8) + "/ws";
+      } else if (clean.startsWith("http://")) {
+        window.BROTATO_WS_URL = "ws://" + clean.slice(7) + "/ws";
+      } else {
+        window.BROTATO_WS_URL = "wss://" + clean + "/ws";
+      }
+    }
+
+    function getRelayHttpBase() {
+      const clean = window.BROTATO_RELAY_URL || "";
+      if (!clean) return "";
+      if (clean.startsWith("https://") || clean.startsWith("http://")) return clean;
+      if (clean.startsWith("wss://")) return "https://" + clean.slice(6);
+      if (clean.startsWith("ws://")) return "http://" + clean.slice(5);
+      return "https://" + clean;
+    }
+
+    function updateRelayServerUrl(val) {
+      const clean = (val || "").trim();
+      localStorage.setItem(RELAY_URL_KEY, clean);
+      applyRelayConfig(clean);
+      refreshRooms();
+    }
+
+    applyRelayConfig(window.BROTATO_RELAY_URL);
+
+    function savePlayerName(val) {
+      const clean = (val || "").trim().slice(0, 20) || "Player";
+      window.BROTATO_PLAYER_NAME = clean;
+      localStorage.setItem(PLAYER_NAME_KEY, clean);
+      focusCanvas();
+    }
+
+    function updateTargetServer(val) {
+      const clean = (val || "").trim();
+      window.BROTATO_TARGET_SERVER = clean;
+      localStorage.setItem(TARGET_SERVER_KEY, clean);
+    }
+
+    // --- Local Save Persistence Bridge ---
+    const pendingActions = [];
+    window.BrotatoSaveBridge = {
+      getStartupFilesJson: function () {
+        return localStorage.getItem(SAVE_STORAGE_KEY) || "";
+      },
+      onGodotSave: function (jsonStr, profileId, charsCount, itemsCount) {
+        try {
+          localStorage.setItem(SAVE_STORAGE_KEY, jsonStr);
+          const badge = document.getElementById("save-status-badge");
+          badge.textContent = `Saved to PC ✓ (P${Number(profileId) + 1}: ${charsCount} Chars, ${itemsCount} Items)`;
+          document.getElementById("save-details-text").textContent =
+            `Active Profile #${Number(profileId) + 1} — ${charsCount} Characters Unlocked, ${itemsCount} Items Unlocked. Automatically saved on this computer (${new Date().toLocaleTimeString()}).`;
+        } catch (e) {
+          console.warn("Failed to write save bundle to localStorage:", e);
+        }
+      },
+      consumePendingAction: function () {
+        if (pendingActions.length === 0) return "";
+        return JSON.stringify(pendingActions.shift());
+      },
+    };
+
+    // --- Network Transport Bridge ---
+    let currentRoomPort = 0;
+    window.BrotatoNetBridge = {
+      onTransportState: function (state, roomPort) {
+        const badge = document.getElementById("net-status-badge");
+        const inviteBtn = document.getElementById("copy-invite-btn");
+        currentRoomPort = roomPort || 0;
+        if (state === "hosting") {
+          badge.className = "badge host";
+          badge.textContent = `Hosting Room #${roomPort}`;
+          inviteBtn.style.display = "inline-block";
+        } else if (state === "connected") {
+          badge.className = "badge ok";
+          badge.textContent = `Connected to Room #${roomPort}`;
+          inviteBtn.style.display = "inline-block";
+        } else if (state === "connecting") {
+          badge.className = "badge";
+          badge.textContent = `Connecting to #${roomPort}...`;
+          inviteBtn.style.display = "none";
+        } else {
+          badge.className = "badge";
+          badge.textContent = "Offline / Solo";
+          inviteBtn.style.display = "none";
+        }
+      },
+    };
+
+    function copyInviteLink() {
+      const port = currentRoomPort || 27462;
+      const params = new URLSearchParams();
+      if (window.BROTATO_RELAY_URL) params.set("relay", window.BROTATO_RELAY_URL);
+      params.set("room", String(port));
+      const url = `${location.origin}/?${params.toString()}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById("copy-invite-btn");
+        const old = btn.textContent;
+        btn.textContent = "✅ Link Copied!";
+        setTimeout(() => (btn.textContent = old), 2000);
+      });
+      focusCanvas();
+    }
+
+    function exportRawProfileSave() {
+      const raw = localStorage.getItem(SAVE_STORAGE_KEY);
+      if (!raw) {
+        alert("No save data found yet. Play or unlock something first!");
+        return;
+      }
+      const bundle = JSON.parse(raw);
+      const profileSave = bundle["user://user/save_v3_0.json"] || bundle["user://user/save_v3_1.json"] || bundle["user://user/save_v3_2.json"];
+      if (!profileSave) {
+        alert("No profile save file found in bundle yet.");
+        return;
+      }
+      downloadBlob(profileSave, "save_v3_0.json");
+    }
+
+    function exportFullSaveBundle() {
+      const raw = localStorage.getItem(SAVE_STORAGE_KEY);
+      if (!raw) {
+        alert("No save data found yet.");
+        return;
+      }
+      downloadBlob(raw, `brotato_web_backup_${new Date().toISOString().slice(0, 10)}.json`);
+    }
+
+    function downloadBlob(text, filename) {
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function handleImportSaveFile(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function () {
+        try {
+          const text = String(reader.result || "");
+          const parsed = JSON.parse(text);
+          if (parsed && typeof parsed === "object" && parsed["user://user/save_v3_0.json"] !== undefined) {
+            localStorage.setItem(SAVE_STORAGE_KEY, text);
+            pendingActions.push({ action: "import_save_bundle", files: parsed });
+            alert("Full profile & settings backup imported!");
+          } else {
+            // Raw Steam save_v3_0.json file
+            const existingRaw = localStorage.getItem(SAVE_STORAGE_KEY);
+            const bundle = existingRaw ? JSON.parse(existingRaw) : {};
+            bundle["user://user/save_v3_0.json"] = text;
+            localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(bundle));
+            pendingActions.push({ action: "import_raw_profile_save", content: text });
+            alert("Steam save_v3_0.json imported into current profile!");
+          }
+          toggleDrawer("saves-drawer");
+          focusCanvas();
+        } catch (err) {
+          alert("Invalid JSON save file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+      ev.target.value = "";
+    }
+
+    function triggerUnlockAll() {
+      if (!confirm("Unlock all characters, weapons, items, and difficulties on the current profile?")) return;
+      pendingActions.push({ action: "unlock_all_current_profile" });
+      toggleDrawer("saves-drawer");
+      focusCanvas();
+    }
+
+    function triggerHostRoom() {
+      pendingActions.push({ action: "host_room" });
+      toggleDrawer("rooms-drawer");
+      focusCanvas();
+    }
+
+    function triggerJoinRoom(address, port) {
+      pendingActions.push({ action: "join_room", address: address || "relay", port: Number(port) || 27462 });
+      const drawer = document.getElementById("rooms-drawer");
+      drawer.classList.remove("open");
+      focusCanvas();
+    }
+
+    function triggerDirectJoin() {
+      const addr = document.getElementById("target-server-input").value.trim() || "relay";
+      const port = parseInt(document.getElementById("target-port-input").value, 10) || 27462;
+      triggerJoinRoom(addr, port);
+    }
+
+    function toggleDrawer(id) {
+      for (const el of document.querySelectorAll(".drawer")) {
+        if (el.id === id) el.classList.toggle("open");
+        else el.classList.remove("open");
+      }
+    }
+
+    function toggleTopbar(collapse) {
+      const bar = document.getElementById("topbar");
+      if (collapse === undefined) bar.classList.toggle("collapsed");
+      else if (collapse) bar.classList.add("collapsed");
+      else bar.classList.remove("collapsed");
+      for (const el of document.querySelectorAll(".drawer")) el.classList.remove("open");
+      focusCanvas();
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+      focusCanvas();
+    }
+
+    function focusCanvas() {
+      const c = document.getElementById("canvas");
+      if (c) c.focus();
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        toggleTopbar();
+      }
+    });
+
+    async function refreshRooms() {
+      try {
+        const base = getRelayHttpBase();
+        const res = await fetch(`${base}/api/info`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const lanBadge = document.getElementById("lan-ip-badge");
+        if (base) {
+          lanBadge.textContent = `Relay: ${base.replace(/^https?:\/\//, "")}`;
+        } else if (data.lanIps && data.lanIps.length > 0) {
+          lanBadge.textContent = `LAN: http://${data.lanIps[0]}:${data.port}`;
+        } else {
+          lanBadge.textContent = `Host: ${location.host}`;
+        }
+        const rooms = data.rooms || [];
+        document.getElementById("room-count-num").textContent = String(rooms.length);
+        const listEl = document.getElementById("drawer-room-list");
+        if (rooms.length === 0) {
+          listEl.innerHTML = `<div style="color:var(--muted);text-align:center;padding:12px;">No active rooms found. Click "Host New Room" or "Create Lobby" in-game!</div>`;
+        } else {
+          listEl.innerHTML = rooms
+            .map(
+              (r) => `
+            <div class="room-row">
+              <div>
+                <div style="font-weight:600;color:#fff;">${escapeHtml(r.room_name || "Room #" + r.game_port)}</div>
+                <div style="color:var(--muted);font-size:11px;">Host: ${escapeHtml(r.host_name)} • Port #${r.game_port} • ${r.member_count}/${r.member_limit} Players • ${escapeHtml(r.state)}</div>
+              </div>
+              <button class="bar-btn primary" onclick="triggerJoinRoom('relay', ${Number(r.game_port)})">Join</button>
+            </div>`
+            )
+            .join("");
+        }
+      } catch (_) {}
+    }
+
+    function escapeHtml(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    setInterval(refreshRooms, 2500);
+    refreshRooms();
+
+    // --- IndexedDB Persistent .pck Cache + Parallel Chunk Loader ---
+    const PCK_CACHE_DB = "brotato_pck_cache_db_v1";
+    const PCK_CACHE_STORE = "pck_blobs";
+
+    function openPckCacheDb() {
+      return new Promise((resolve, reject) => {
+        if (typeof indexedDB === "undefined") return resolve(null);
+        const req = indexedDB.open(PCK_CACHE_DB, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(PCK_CACHE_STORE)) {
+            db.createObjectStore(PCK_CACHE_STORE);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    async function getCachedPck(expectedVersion, expectedBytes) {
+      const db = await openPckCacheDb();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(PCK_CACHE_STORE, "readonly");
+          const req = tx.objectStore(PCK_CACHE_STORE).get("index.pck");
+          req.onsuccess = () => {
+            const entry = req.result;
+            if (entry && entry.version === expectedVersion && entry.bytes && entry.bytes.byteLength === expectedBytes) {
+              resolve(entry.bytes);
+            } else {
+              resolve(null);
+            }
+          };
+          req.onerror = () => resolve(null);
+        } catch (_) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function saveCachedPck(version, uint8Bytes) {
+      const db = await openPckCacheDb();
+      if (!db) return;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(PCK_CACHE_STORE, "readwrite");
+          tx.objectStore(PCK_CACHE_STORE).put({ version, bytes: uint8Bytes }, "index.pck");
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        } catch (_) {
+          resolve();
+        }
+      });
+    }
+
+    async function loadPckBuffer(statusEl, fillEl) {
+      const manifestRes = await fetch("/chunks/pck.manifest.json", { cache: "no-cache" });
+      if (!manifestRes.ok) {
+        throw new Error("Could not load /chunks/pck.manifest.json");
+      }
+      const manifest = await manifestRes.json();
+      const totalBytes = manifest.totalBytes;
+      const chunkSize = manifest.chunkSize;
+      const chunks = manifest.chunks || [];
+
+      // 1. Check local IndexedDB cache first (0 MB download on repeat visits!)
+      const cached = await getCachedPck(manifest.version, totalBytes);
+      if (cached) {
+        fillEl.style.width = "100%";
+        statusEl.textContent = "Loaded 270 MB game pack from local PC cache! Starting engine...";
+        return cached;
+      }
+
+      // 2. Download 19 MiB chunks in parallel (4 concurrent workers) into pre-allocated Uint8Array
+      const assembled = new Uint8Array(totalBytes);
+      let loadedBytes = 0;
+      let nextIdx = 0;
+      const mbTot = (totalBytes / (1024 * 1024)).toFixed(1);
+
+      async function worker() {
+        while (nextIdx < chunks.length) {
+          const idx = nextIdx++;
+          const url = "/" + chunks[idx].replace(/^\/+/, "");
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`Failed to fetch chunk ${url} (HTTP ${res.status})`);
+          const buf = new Uint8Array(await res.arrayBuffer());
+          const offset = idx * chunkSize;
+          assembled.set(buf, offset);
+          loadedBytes += buf.byteLength;
+          const pct = Math.min(100, Math.round((loadedBytes / totalBytes) * 100));
+          const mbCur = (loadedBytes / (1024 * 1024)).toFixed(1);
+          fillEl.style.width = pct + "%";
+          statusEl.textContent = `Downloading Game Pack (First-Time Setup)... ${mbCur} MB / ${mbTot} MB (${pct}%)`;
+        }
+      }
+
+      const workers = [];
+      for (let i = 0; i < Math.min(4, chunks.length); i++) {
+        workers.push(worker());
+      }
+      await Promise.all(workers);
+
+      statusEl.textContent = "Caching game pack to your PC for instant future loads...";
+      saveCachedPck(manifest.version, assembled);
+      return assembled;
+    }
+
+    // Start Godot 3.6 Engine
+    (async function startBrotatoEngine() {
+      const statusEl = document.getElementById("loading-status");
+      const fillEl = document.getElementById("progress-fill");
+      const overlayEl = document.getElementById("loading-overlay");
+
+      try {
+        const engine = new Engine({
+          args: ["--main-pack", "index.pck"],
+          canvasResizePolicy: 2,
+          executable: "index",
+          experimentalVK: false,
+          fileSizes: { "index.pck": 283371625, "index.wasm": 17642812 },
+          focusCanvas: true,
+          gdnativeLibs: [],
+        });
+
+        const [_, pckBytes] = await Promise.all([
+          engine.init("index"),
+          loadPckBuffer(statusEl, fillEl),
+        ]);
+
+        statusEl.textContent = "Mounting Game Pack & Starting Brotato...";
+        await engine.preloadFile(pckBytes.buffer, "index.pck");
+        await engine.start();
+
+        overlayEl.classList.add("hidden");
+        focusCanvas();
+        const urlRoom = new URLSearchParams(location.search).get("room");
+        if (urlRoom && Number(urlRoom) > 0) {
+          setTimeout(() => {
+            pendingActions.push({ action: "join_room", address: "relay", port: Number(urlRoom) });
+          }, 3500);
+        }
+      } catch (err) {
+        console.error(err);
+        statusEl.style.color = "#ff6b6b";
+        statusEl.textContent = "Error starting engine: " + (err && err.message ? err.message : String(err));
+      }
+    })();
+  </script>
+</body>
+</html>

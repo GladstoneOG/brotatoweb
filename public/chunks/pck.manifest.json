@@ -1,0 +1,22 @@
+{
+  "version": "5598565ce0c6",
+  "totalBytes": 283371827,
+  "chunkSize": 19922944,
+  "chunks": [
+    "chunks/index.pck.part00",
+    "chunks/index.pck.part01",
+    "chunks/index.pck.part02",
+    "chunks/index.pck.part03",
+    "chunks/index.pck.part04",
+    "chunks/index.pck.part05",
+    "chunks/index.pck.part06",
+    "chunks/index.pck.part07",
+    "chunks/index.pck.part08",
+    "chunks/index.pck.part09",
+    "chunks/index.pck.part10",
+    "chunks/index.pck.part11",
+    "chunks/index.pck.part12",
+    "chunks/index.pck.part13",
+    "chunks/index.pck.part14"
+  ]
+}
