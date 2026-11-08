@@ -116,13 +116,13 @@ export class BrotatoRelayHub {
     const requestedRoom = parseInt(url.searchParams.get("room") || "27462", 10);
 
     if (role === "discover") {
-      ws.addEventListener("message", () => {
-        for (const entry of this.getRoomListSnapshot()) {
-          try {
-            ws.send(JSON.stringify(entry));
-          } catch (_) {}
-        }
-      });
+      const sendRooms = () => {
+        try {
+          ws.send(JSON.stringify({ rooms: this.getRoomListSnapshot() }));
+        } catch (_) {}
+      };
+      sendRooms();
+      ws.addEventListener("message", () => sendRooms());
       return;
     }
 
