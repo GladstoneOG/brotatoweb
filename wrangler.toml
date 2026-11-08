@@ -1,0 +1,11 @@
+name = "brotato-web-relay"
+main = "cloudflare_worker.js"
+compatibility_date = "2024-11-01"
+
+[[durable_objects.bindings]]
+name = "RELAY_HUB"
+class_name = "BrotatoRelayHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BrotatoRelayHub"]
