@@ -28,8 +28,9 @@ Play **Brotato** directly in your browser with real 1–4 player online co-op!
 ## ⌨️ Controls & Shortcuts
 
 - **Movement:** `WASD` or `Arrow Keys`
-- **Menu Navigation:** Mouse or Keyboard / Gamepad
-- **Top Utility Bar:** Press `F2` to toggle the top menu (rooms, saves, fullscreen)
+- **Pause Game:** `Esc` *(stays in fullscreen!)*
+- **Toggle Fullscreen:** `F11`
+- **Top Utility Bar:** `F2` to toggle the top menu (rooms, saves, fullscreen)
 
 ---
 

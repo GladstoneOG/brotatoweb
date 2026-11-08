@@ -276,7 +276,7 @@
       <button class="bar-btn primary" onclick="toggleDrawer('rooms-drawer')">🌐 Rooms / IP (<span id="room-count-num">0</span>)</button>
       <button class="bar-btn" onclick="toggleDrawer('saves-drawer')">💾 Local Profile &amp; Unlocks</button>
       <span id="save-status-badge" class="badge ok" title="Your profile and unlocks are automatically saved to this computer">Saved to PC ✓</span>
-      <button class="bar-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
+      <button class="bar-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F11)">⛶ Fullscreen (F11)</button>
       <button class="bar-btn" onclick="toggleTopbar(true)" title="Hide Top Bar (F2)">▲ Hide</button>
     </div>
   </div>
@@ -469,20 +469,71 @@
       },
     };
 
-    function copyInviteLink() {
-      const port = currentRoomPort || 27462;
+    function buildInviteUrl(customPort) {
+      const port = Number(customPort) || currentRoomPort || 27462;
       const params = new URLSearchParams();
-      if (window.BROTATO_RELAY_URL) params.set("relay", window.BROTATO_RELAY_URL);
+      if (window.BROTATO_RELAY_URL && window.BROTATO_RELAY_URL !== location.origin) {
+        params.set("relay", window.BROTATO_RELAY_URL);
+      }
       params.set("room", String(port));
-      const url = `${location.origin}/?${params.toString()}`;
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById("copy-invite-btn");
-        const old = btn.textContent;
-        btn.textContent = "✅ Link Copied!";
-        setTimeout(() => (btn.textContent = old), 2000);
-      });
-      focusCanvas();
+      return `${location.origin}/?${params.toString()}`;
     }
+
+    function copyTextWithFallback(text) {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (_) {}
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+      }
+    }
+
+    function showInviteCopiedBadge() {
+      const btn = document.getElementById("copy-invite-btn");
+      if (!btn) return;
+      btn.style.display = "inline-block";
+      btn.textContent = "✅ Link Copied!";
+      clearTimeout(window._inviteBtnResetTimer);
+      window._inviteBtnResetTimer = setTimeout(() => {
+        btn.textContent = "🔗 Copy Invite Link";
+      }, 2200);
+    }
+
+    window.copyInviteLinkFromGame = function (roomPort) {
+      const url = buildInviteUrl(roomPort);
+      copyTextWithFallback(url);
+      showInviteCopiedBadge();
+      focusCanvas();
+      return url;
+    };
+
+    function copyInviteLink() {
+      window.copyInviteLinkFromGame(currentRoomPort || 27462);
+    }
+
+    window.closeGameTab = function () {
+      try {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (_) {}
+      try {
+        window.open("", "_self", "");
+        window.close();
+      } catch (_) {}
+      setTimeout(() => {
+        try {
+          window.location.replace("about:blank");
+        } catch (_) {}
+      }, 150);
+    };
 
     function exportRawProfileSave() {
       const raw = localStorage.getItem(SAVE_STORAGE_KEY);
@@ -591,10 +642,36 @@
       focusCanvas();
     }
 
+    function syncFullscreenEscapeLock() {
+      if (document.fullscreenElement) {
+        if (navigator.keyboard && typeof navigator.keyboard.lock === "function") {
+          navigator.keyboard.lock(["Escape"]).catch(() => {});
+        }
+      } else {
+        if (navigator.keyboard && typeof navigator.keyboard.unlock === "function") {
+          try {
+            navigator.keyboard.unlock();
+          } catch (_) {}
+        }
+      }
+    }
+
+    document.addEventListener("fullscreenchange", syncFullscreenEscapeLock);
+
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement
+          .requestFullscreen()
+          .then(() => {
+            syncFullscreenEscapeLock();
+          })
+          .catch(() => {});
       } else {
+        if (navigator.keyboard && typeof navigator.keyboard.unlock === "function") {
+          try {
+            navigator.keyboard.unlock();
+          } catch (_) {}
+        }
         document.exitFullscreen().catch(() => {});
       }
       focusCanvas();
@@ -609,6 +686,9 @@
       if (e.key === "F2") {
         e.preventDefault();
         toggleTopbar();
+      } else if (e.key === "F11") {
+        e.preventDefault();
+        toggleFullscreen();
       }
     });
 
@@ -782,6 +862,9 @@
           fileSizes: { "index.pck": 283371625, "index.wasm": 17642812 },
           focusCanvas: true,
           gdnativeLibs: [],
+          onExit: function () {
+            if (window.closeGameTab) window.closeGameTab();
+          },
         });
 
         const [_, pckBytes] = await Promise.all([
