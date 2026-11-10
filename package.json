@@ -8,7 +8,6 @@
     "build:pck": "python tools/build_web_pck.py"
   },
   "dependencies": {
-    "brotato-web-multiplayer": "file:",
     "ws": "^8.18.0"
   }
 }

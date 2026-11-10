@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Brotato Web Multiplayer (v1.2.0.1 + All DLCs)</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <style>
@@ -256,6 +256,191 @@
       background: linear-gradient(90deg, #59b972, #8ce99a);
       transition: width 0.15s linear;
     }
+
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 820px) {
+      #topbar {
+        font-size: 11px;
+        padding: 3px 8px;
+        min-height: 36px;
+      }
+      .brand span {
+        display: none;
+      }
+      #lan-ip-badge, #save-status-badge {
+        display: none;
+      }
+      input.bar-input {
+        width: 85px;
+        font-size: 11px;
+        padding: 2px 6px;
+      }
+      button.bar-btn {
+        padding: 3px 6px;
+        font-size: 11px;
+      }
+      .drawer {
+        width: 380px;
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 54px);
+        overflow-y: auto;
+        right: 8px;
+        top: 42px;
+        padding: 10px;
+      }
+    }
+
+    /* Mobile Enter / Fullscreen Overlay */
+    #mobile-enter-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: radial-gradient(circle at center, #242031 0%, #0d0c11 100%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #mobile-enter-card {
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+      padding: 24px 20px;
+      background: rgba(24, 22, 30, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    }
+    #mobile-enter-card img {
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .mobile-play-btn {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      color: #09130c;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(89, 185, 114, 0.35);
+      transition: background 0.15s, transform 0.1s;
+    }
+    .mobile-play-btn:active {
+      transform: scale(0.98);
+      background: var(--accent-hover);
+    }
+
+    /* Portrait Rotation Warning Overlay */
+    #portrait-rotate-prompt {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(12, 11, 16, 0.97);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #portrait-rotate-card {
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .rotate-phone-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: rotatePhoneAnim 2.2s infinite ease-in-out;
+    }
+    @keyframes rotatePhoneAnim {
+      0%, 15% { transform: rotate(0deg); }
+      50%, 65% { transform: rotate(-90deg); }
+      100% { transform: rotate(-90deg); }
+    }
+
+    /* Floating Virtual Joystick */
+    #virtual-joystick {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 130px;
+      height: 130px;
+      pointer-events: none;
+      z-index: 120;
+      opacity: 0;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.12s ease-out;
+      will-change: transform, opacity;
+    }
+    #virtual-joystick.v-joystick-active {
+      opacity: 0.92;
+    }
+    #v-joystick-base {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(20, 20, 28, 0.6) 65%, rgba(89, 185, 114, 0.28) 100%);
+      border: 2px solid rgba(140, 233, 154, 0.55);
+      box-shadow: 0 0 24px rgba(89, 185, 114, 0.28), inset 0 0 16px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+    #v-joystick-stick {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #8ce99a 0%, #59b972 55%, #347a46 100%);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 10px rgba(140, 233, 154, 0.65);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      will-change: transform;
+    }
+
+    /* Mobile Floating Pause Button */
+    #mobile-pause-btn {
+      position: fixed;
+      top: 8px;
+      left: 10px;
+      z-index: 101;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(24, 22, 30, 0.82);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #mobile-pause-btn:active {
+      transform: scale(0.94);
+      background: rgba(255, 255, 255, 0.25);
+    }
   </style>
 </head>
 <body>
@@ -347,6 +532,44 @@
   <canvas id="canvas" oncontextmenu="event.preventDefault();" tabindex="0">
     HTML5 canvas appears to be unsupported in the current browser.
   </canvas>
+
+  <!-- Mobile Controls & Overlays -->
+  <button id="mobile-pause-btn" onclick="triggerMobilePause()" title="Pause Game (Esc)">⏸</button>
+
+  <!-- Mobile Start / Fullscreen Overlay -->
+  <div id="mobile-enter-overlay">
+    <div id="mobile-enter-card">
+      <img src="/favicon.png" alt="Brotato" />
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px;color:#fff;">Brotato Mobile</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.4;">
+        Tap below to switch to fullscreen landscape mode with touch joystick movement controls.
+      </div>
+      <button class="mobile-play-btn" onclick="enterMobileLandscapeFullscreen()">
+        🎮 Tap to Play (Landscape Fullscreen)
+      </button>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:10px;">
+        (If prompted, allow fullscreen and rotate your phone sideways)
+      </div>
+    </div>
+  </div>
+
+  <!-- Portrait Rotation Warning Overlay -->
+  <div id="portrait-rotate-prompt">
+    <div id="portrait-rotate-card">
+      <div class="rotate-phone-icon">📱</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#fff;">Please Rotate to Landscape</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.4;">
+        Brotato is an action arena game designed for widescreen. Turn your phone sideways to play!
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Virtual Joystick -->
+  <div id="virtual-joystick" class="v-joystick-hidden">
+    <div id="v-joystick-base">
+      <div id="v-joystick-stick"></div>
+    </div>
+  </div>
 
   <script src="/relay_config.js"></script>
   <script src="/index.js"></script>
@@ -889,6 +1112,279 @@
         statusEl.style.color = "#ff6b6b";
         statusEl.textContent = "Error starting engine: " + (err && err.message ? err.message : String(err));
       }
+    })();
+
+    // --- Mobile Viewport, Fullscreen, Orientation & Touch Joystick Controls ---
+    function isMobileDevice() {
+      const ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isTouchScreen = (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0) || ("ontouchstart" in window);
+      const isCoarse = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+      const isSmallTouch = isTouchScreen && (isCoarse || window.innerWidth <= 1024);
+      return isMobileUA || isSmallTouch;
+    }
+
+    function checkOrientation() {
+      if (!isMobileDevice()) return;
+      const rotatePrompt = document.getElementById("portrait-rotate-prompt");
+      if (!rotatePrompt) return;
+      // In mobile, if height > width, user is holding device in portrait
+      const isPortrait = window.innerHeight > window.innerWidth;
+      rotatePrompt.style.display = isPortrait ? "flex" : "none";
+    }
+
+    async function enterMobileLandscapeFullscreen() {
+      try {
+        const root = document.documentElement;
+        if (!document.fullscreenElement) {
+          if (root.requestFullscreen) {
+            await root.requestFullscreen();
+          } else if (root.webkitRequestFullscreen) {
+            await root.webkitRequestFullscreen();
+          }
+        }
+      } catch (err) {
+        console.warn("Fullscreen request error:", err);
+      }
+
+      try {
+        if (screen.orientation && typeof screen.orientation.lock === "function") {
+          await screen.orientation.lock("landscape").catch(() => {});
+        }
+      } catch (err) {
+        console.warn("Orientation lock error (may require physical device rotation on iOS):", err);
+      }
+
+      const enterOverlay = document.getElementById("mobile-enter-overlay");
+      if (enterOverlay) enterOverlay.style.display = "none";
+
+      toggleTopbar(true);
+      focusCanvas();
+      checkOrientation();
+    }
+
+    function triggerMobilePause() {
+      const c = document.getElementById("canvas");
+      if (!c) return;
+      c.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape", key: "Escape", bubbles: true, cancelable: true }));
+      setTimeout(() => {
+        c.dispatchEvent(new KeyboardEvent("keyup", { code: "Escape", key: "Escape", bubbles: true, cancelable: true }));
+      }, 70);
+    }
+
+    (function initMobileTouchControls() {
+      const canvasEl = document.getElementById("canvas");
+      const joyEl = document.getElementById("virtual-joystick");
+      const stickEl = document.getElementById("v-joystick-stick");
+      const pauseBtn = document.getElementById("mobile-pause-btn");
+      const enterOverlay = document.getElementById("mobile-enter-overlay");
+
+      const onMobile = isMobileDevice();
+      if (onMobile) {
+        document.body.classList.add("is-mobile");
+        if (pauseBtn) pauseBtn.style.display = "flex";
+        if (enterOverlay && !document.fullscreenElement) {
+          enterOverlay.style.display = "flex";
+        }
+        // Auto-collapse topbar on mobile to maximize canvas viewport
+        toggleTopbar(true);
+      }
+
+      window.addEventListener("resize", checkOrientation);
+      window.addEventListener("orientationchange", () => {
+        setTimeout(checkOrientation, 250);
+      });
+      checkOrientation();
+
+      // Virtual gamepad emulation (provides full 360-degree analog precision to Godot)
+      let virtualStickAxisX = 0;
+      let virtualStickAxisY = 0;
+      const virtualPad = {
+        id: "Standard Gamepad (Virtual Touch Stick)",
+        index: 0,
+        connected: true,
+        timestamp: Date.now(),
+        mapping: "standard",
+        axes: [0, 0, 0, 0],
+        buttons: Array.from({ length: 16 }, () => ({ pressed: false, touched: false, value: 0 })),
+      };
+
+      try {
+        const origGetGamepads = navigator.getGamepads ? navigator.getGamepads.bind(navigator) : null;
+        navigator.getGamepads = function () {
+          const pads = origGetGamepads ? Array.from(origGetGamepads() || []) : [];
+          if (pads.length === 0 || !pads[0]) {
+            virtualPad.axes[0] = virtualStickAxisX;
+            virtualPad.axes[1] = virtualStickAxisY;
+            virtualPad.timestamp = performance.now();
+            pads[0] = virtualPad;
+          }
+          return pads;
+        };
+      } catch (err) {
+        console.warn("Could not polyfill getGamepads, keyboard events will handle movement:", err);
+      }
+
+      // Keyboard movement state
+      const activeKeys = {
+        KeyW: false,
+        KeyS: false,
+        KeyA: false,
+        KeyD: false,
+        ArrowUp: false,
+        ArrowDown: false,
+        ArrowLeft: false,
+        ArrowRight: false,
+      };
+
+      function dispatchKey(code, key, pressed) {
+        if (activeKeys[code] === pressed) return;
+        activeKeys[code] = pressed;
+        const target = canvasEl || document.body;
+        target.dispatchEvent(
+          new KeyboardEvent(pressed ? "keydown" : "keyup", {
+            code: code,
+            key: key,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      }
+
+      function releaseAllJoyKeys() {
+        dispatchKey("KeyW", "w", false);
+        dispatchKey("KeyS", "s", false);
+        dispatchKey("KeyA", "a", false);
+        dispatchKey("KeyD", "d", false);
+        dispatchKey("ArrowUp", "ArrowUp", false);
+        dispatchKey("ArrowDown", "ArrowDown", false);
+        dispatchKey("ArrowLeft", "ArrowLeft", false);
+        dispatchKey("ArrowRight", "ArrowRight", false);
+        virtualStickAxisX = 0;
+        virtualStickAxisY = 0;
+      }
+
+      let touchJoyId = null;
+      let startX = 0;
+      let startY = 0;
+      let hasDragged = false;
+      const DRAG_THRESHOLD = 12; // Minimum distance (pixels) to distinguish drag from tap
+      const MAX_RADIUS = 48;     // Max joystick knob radius in pixels
+
+      function handleTouchStart(e) {
+        // Exclude touches on UI controls, overlays, or buttons
+        if (e.target.closest("#topbar, .drawer, #mobile-pause-btn, #mobile-enter-overlay, #show-bar-pill")) {
+          return;
+        }
+
+        // Only handle one active joystick thumb at a time
+        if (touchJoyId !== null) return;
+
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          // Left 55% of the screen is the movement zone
+          if (t.clientX < window.innerWidth * 0.55) {
+            touchJoyId = t.identifier;
+            startX = t.clientX;
+            startY = t.clientY;
+            hasDragged = false;
+            break;
+          }
+        }
+      }
+
+      function handleTouchMove(e) {
+        if (touchJoyId === null) return;
+
+        let touch = null;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchJoyId) {
+            touch = e.changedTouches[i];
+            break;
+          }
+        }
+        if (!touch) return;
+
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        const dist = Math.hypot(dx, dy);
+
+        if (!hasDragged) {
+          if (dist > DRAG_THRESHOLD) {
+            hasDragged = true;
+            if (joyEl) {
+              joyEl.style.left = startX + "px";
+              joyEl.style.top = startY + "px";
+              joyEl.classList.add("v-joystick-active");
+            }
+          }
+        }
+
+        if (hasDragged) {
+          if (e.cancelable) e.preventDefault();
+
+          const clampedDist = Math.min(dist, MAX_RADIUS);
+          const angle = Math.atan2(dy, dx);
+          const stickX = Math.cos(angle) * clampedDist;
+          const stickY = Math.sin(angle) * clampedDist;
+
+          if (stickEl) {
+            stickEl.style.transform = `translate(calc(-50% + ${stickX.toFixed(1)}px), calc(-50% + ${stickY.toFixed(1)}px))`;
+          }
+
+          // Normalized analog vector
+          const normX = dx / (dist || 1);
+          const normY = dy / (dist || 1);
+
+          virtualStickAxisX = stickX / MAX_RADIUS;
+          virtualStickAxisY = stickY / MAX_RADIUS;
+
+          // 8-directional keyboard dispatch (WASD + Arrows)
+          const deadzone = 0.35;
+          const isUp = normY < -deadzone;
+          const isDown = normY > deadzone;
+          const isLeft = normX < -deadzone;
+          const isRight = normX > deadzone;
+
+          dispatchKey("KeyW", "w", isUp);
+          dispatchKey("ArrowUp", "ArrowUp", isUp);
+          dispatchKey("KeyS", "s", isDown);
+          dispatchKey("ArrowDown", "ArrowDown", isDown);
+          dispatchKey("KeyA", "a", isLeft);
+          dispatchKey("ArrowLeft", "ArrowLeft", isLeft);
+          dispatchKey("KeyD", "d", isRight);
+          dispatchKey("ArrowRight", "ArrowRight", isRight);
+        }
+      }
+
+      function handleTouchEnd(e) {
+        if (touchJoyId === null) return;
+
+        let found = false;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchJoyId) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) return;
+
+        if (hasDragged) {
+          releaseAllJoyKeys();
+          if (joyEl) joyEl.classList.remove("v-joystick-active");
+          if (stickEl) stickEl.style.transform = "translate(-50%, -50%)";
+        }
+
+        touchJoyId = null;
+        hasDragged = false;
+        focusCanvas();
+      }
+
+      window.addEventListener("touchstart", handleTouchStart, { passive: false });
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleTouchEnd, { passive: false });
+      window.addEventListener("touchcancel", handleTouchEnd, { passive: false });
+      window.addEventListener("blur", releaseAllJoyKeys);
     })();
   </script>
 </body>
