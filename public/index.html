@@ -7,14 +7,21 @@
   <link rel="icon" type="image/png" href="/favicon.png" />
   <style>
     :root {
-      --bg-dark: #121116;
-      --panel-bg: rgba(24, 22, 30, 0.92);
-      --border: rgba(255, 255, 255, 0.14);
-      --accent: #59b972;
-      --accent-hover: #6cd186;
-      --warn: #e6a23c;
-      --text: #f0eef6;
-      --muted: #a6a1b5;
+      --bg-dark: #090c12;
+      --surface: rgba(15, 19, 28, 0.88);
+      --surface-solid: #111622;
+      --card: rgba(24, 30, 44, 0.92);
+      --border: rgba(148, 163, 184, 0.18);
+      --border-strong: rgba(148, 163, 184, 0.32);
+      --accent: #38c172;
+      --accent-hover: #4cd987;
+      --accent-glow: rgba(56, 193, 114, 0.25);
+      --danger: #e04652;
+      --danger-hover: #f25965;
+      --warn: #f5b942;
+      --info: #56b0ff;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
     }
     * {
       box-sizing: border-box;
@@ -25,9 +32,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #000;
+      background-color: #05070b;
       color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       user-select: none;
       touch-action: none;
     }
@@ -38,24 +45,26 @@
       margin: 0;
       outline: none;
     }
-    /* Top Overlay Bar */
+    /* Glassmorphic Top HUD Bar */
     #topbar {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      min-height: 42px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(8px);
+      min-height: 38px;
+      background: linear-gradient(180deg, rgba(14, 18, 28, 0.94) 0%, rgba(11, 15, 23, 0.88) 100%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 4px 12px;
-      gap: 10px;
+      padding: 3px 12px;
+      gap: 8px;
       z-index: 100;
-      font-size: 13px;
-      transition: transform 0.2s ease;
+      font-size: 12.5px;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
     #topbar.collapsed {
       transform: translateY(-100%);
@@ -63,16 +72,24 @@
     #show-bar-pill {
       position: fixed;
       top: 8px;
-      right: 12px;
+      right: 14px;
       z-index: 101;
-      background: rgba(24, 22, 30, 0.85);
-      border: 1px solid var(--border);
+      background: rgba(15, 19, 28, 0.86);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-strong);
       color: var(--text);
-      border-radius: 6px;
-      padding: 4px 10px;
+      border-radius: 999px;
+      padding: 5px 13px;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
       display: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    #show-bar-pill:hover {
+      background: rgba(30, 38, 56, 0.95);
+      transform: translateY(1px);
     }
     #topbar.collapsed + #show-bar-pill {
       display: block;
@@ -87,133 +104,283 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: -0.01em;
       color: #fff;
+      padding-right: 4px;
     }
     .brand img {
       width: 24px;
       height: 24px;
-      border-radius: 4px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(56, 193, 114, 0.25);
     }
     .badge {
-      padding: 3px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid var(--border);
       color: var(--muted);
       white-space: nowrap;
     }
+    .badge::before {
+      content: "";
+      display: none;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
     .badge.ok {
-      color: #8ce99a;
-      border-color: rgba(89, 185, 114, 0.4);
-      background: rgba(89, 185, 114, 0.14);
+      color: #86efac;
+      border-color: rgba(56, 193, 114, 0.42);
+      background: rgba(56, 193, 114, 0.13);
+    }
+    .badge.ok::before {
+      display: inline-block;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
     }
     .badge.host {
-      color: #ffd43b;
-      border-color: rgba(255, 212, 59, 0.45);
-      background: rgba(255, 212, 59, 0.14);
+      color: #fde047;
+      border-color: rgba(250, 204, 21, 0.45);
+      background: rgba(250, 204, 21, 0.13);
     }
-    input.bar-input {
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 5px;
-      padding: 4px 8px;
-      font-size: 12px;
-      width: 125px;
+    .badge.host::before {
+      display: inline-block;
+      background: #facc15;
+      box-shadow: 0 0 8px #facc15;
     }
-    input.bar-input:focus {
-      outline: 1px solid var(--accent);
-    }
-    button.bar-btn {
-      background: rgba(255, 255, 255, 0.09);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 5px;
-      padding: 4px 9px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-    }
-    button.bar-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-    }
-    button.bar-btn.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #09130c;
-      font-weight: 700;
-    }
-    button.bar-btn.primary:hover {
-      background: var(--accent-hover);
-    }
-    /* Dropdown Drawer for Rooms & Saves */
-    .drawer {
-      position: fixed;
-      top: 46px;
-      right: 12px;
-      width: 440px;
-      max-width: calc(100vw - 24px);
-      background: var(--panel-bg);
-      backdrop-filter: blur(12px);
+    .name-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 14px;
+      padding: 2px 4px 2px 9px;
+    }
+    .name-pill label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input.bar-input {
+      background: rgba(9, 12, 18, 0.65);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 500;
+      width: 118px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .name-pill input.bar-input {
+      border: none;
+      background: transparent;
+      padding: 4px 6px;
+      width: 108px;
+    }
+    input.bar-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+    .name-pill:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+    button.bar-btn {
+      background: rgba(30, 38, 56, 0.78);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    button.bar-btn:hover {
+      background: rgba(45, 57, 82, 0.92);
+      border-color: rgba(148, 163, 184, 0.5);
+    }
+    button.bar-btn:active {
+      transform: translateY(1px);
+    }
+    button.bar-btn.primary {
+      background: linear-gradient(135deg, #2ea860 0%, #38c172 100%);
+      border-color: rgba(134, 239, 172, 0.5);
+      color: #06140c;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(56, 193, 114, 0.25);
+    }
+    button.bar-btn.primary:hover {
+      background: linear-gradient(135deg, #38c172 0%, #52de8c 100%);
+      box-shadow: 0 3px 14px rgba(56, 193, 114, 0.4);
+    }
+    button.bar-btn.danger {
+      background: rgba(224, 70, 82, 0.18);
+      border-color: rgba(242, 89, 101, 0.55);
+      color: #fda4af;
+      font-weight: 700;
+    }
+    button.bar-btn.danger:hover {
+      background: var(--danger);
+      border-color: var(--danger-hover);
+      color: #fff;
+    }
+    button.bar-btn.ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted);
+      padding: 5px 8px;
+    }
+    button.bar-btn.ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+    /* Sleek Drawers */
+    .drawer {
+      position: fixed;
+      top: 54px;
+      right: 14px;
+      width: 460px;
+      max-width: calc(100vw - 28px);
+      max-height: calc(100vh - 72px);
+      overflow-y: auto;
+      background: rgba(13, 17, 26, 0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 18px;
       z-index: 102;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
       display: none;
+      animation: drawerIn 0.16s ease-out;
+    }
+    @keyframes drawerIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .drawer.open {
       display: block;
     }
     .drawer h3 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: #fff;
     }
     .drawer p {
-      margin: 4px 0 10px 0;
-      font-size: 12px;
+      margin: 0 0 12px 0;
+      font-size: 12.5px;
       color: var(--muted);
-      line-height: 1.4;
+      line-height: 1.45;
+    }
+    .section-card {
+      background: rgba(20, 26, 38, 0.78);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .room-list {
-      max-height: 200px;
+      max-height: 210px;
       overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px;
-      margin-bottom: 10px;
-      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
     .room-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      font-size: 12px;
+      gap: 10px;
+      padding: 9px 11px;
+      background: rgba(12, 16, 24, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 9px;
+      font-size: 12.5px;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .room-row:last-child {
-      border-bottom: none;
+    .room-row:hover {
+      border-color: rgba(148, 163, 184, 0.34);
+      background: rgba(24, 31, 46, 0.85);
+    }
+    .slot-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 22px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(86, 176, 255, 0.15);
+      color: #7dd3fc;
+      margin-right: 6px;
+    }
+    .slot-tag.p1 { background: rgba(86, 176, 255, 0.18); color: #7dd3fc; }
+    .slot-tag.p2 { background: rgba(74, 222, 128, 0.18); color: #86efac; }
+    .slot-tag.p3 { background: rgba(250, 204, 21, 0.18); color: #fde047; }
+    .slot-tag.p4 { background: rgba(192, 132, 252, 0.18); color: #d8b4fe; }
+    details.advanced-box {
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+    details.advanced-box summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 2px;
+    }
+    details.advanced-box summary:hover {
+      color: var(--text);
     }
     /* Loading Screen */
     #loading-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at center, #221f2b 0%, #0e0d12 100%);
+      background: radial-gradient(circle at 50% 38%, #1c2438 0%, #090c12 72%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 90;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.4s ease;
     }
     #loading-overlay.hidden {
       opacity: 0;
@@ -221,22 +388,36 @@
     }
     #loading-card {
       text-align: center;
-      max-width: 420px;
+      max-width: 440px;
       width: 90%;
-      padding: 28px;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      padding: 34px 30px;
+      background: rgba(14, 19, 30, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), 0 0 40px rgba(56, 193, 114, 0.08);
     }
     #loading-card img {
-      width: 76px;
-      height: 76px;
-      margin-bottom: 12px;
+      width: 82px;
+      height: 82px;
+      margin-bottom: 14px;
+      border-radius: 16px;
+      box-shadow: 0 8px 28px rgba(56, 193, 114, 0.25);
     }
     #loading-title {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       margin-bottom: 6px;
+      color: #fff;
+    }
+    #loading-subtitle {
+      font-size: 12px;
+      color: #86efac;
+      font-weight: 600;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
     #loading-status {
       font-size: 13px;
@@ -246,15 +427,18 @@
     .progress-track {
       width: 100%;
       height: 10px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 999px;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
     #progress-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #59b972, #8ce99a);
-      transition: width 0.15s linear;
+      background: linear-gradient(90deg, #2ea860, #4ade80, #86efac);
+      border-radius: 999px;
+      box-shadow: 0 0 12px rgba(74, 222, 128, 0.55);
+      transition: width 0.18s ease-out;
     }
 
     /* Mobile Responsive Optimizations */
@@ -271,12 +455,12 @@
         display: none;
       }
       input.bar-input {
-        width: 85px;
+        width: 82px;
         font-size: 11px;
         padding: 2px 6px;
       }
       button.bar-btn {
-        padding: 3px 6px;
+        padding: 3px 7px;
         font-size: 11px;
       }
       .drawer {
@@ -286,7 +470,7 @@
         overflow-y: auto;
         right: 8px;
         top: 42px;
-        padding: 10px;
+        padding: 12px;
       }
     }
 
@@ -295,7 +479,7 @@
       position: fixed;
       inset: 0;
       z-index: 150;
-      background: radial-gradient(circle at center, #242031 0%, #0d0c11 100%);
+      background: radial-gradient(circle at 50% 38%, #1c2438 0%, #090c12 75%);
       display: none;
       flex-direction: column;
       align-items: center;
@@ -308,34 +492,33 @@
       text-align: center;
       max-width: 360px;
       width: 90%;
-      padding: 24px 20px;
-      background: rgba(24, 22, 30, 0.95);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+      padding: 26px 22px;
+      background: rgba(14, 19, 30, 0.94);
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.72);
     }
     #mobile-enter-card img {
       width: 68px;
       height: 68px;
-      border-radius: 12px;
+      border-radius: 14px;
       margin-bottom: 12px;
     }
     .mobile-play-btn {
       width: 100%;
-      background: var(--accent);
+      background: linear-gradient(135deg, #2ea860 0%, #38c172 100%);
       border: none;
-      color: #09130c;
+      color: #06140c;
       font-weight: 700;
       font-size: 15px;
       padding: 12px 16px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(89, 185, 114, 0.35);
+      box-shadow: 0 4px 16px rgba(56, 193, 114, 0.35);
       transition: background 0.15s, transform 0.1s;
     }
     .mobile-play-btn:active {
       transform: scale(0.98);
-      background: var(--accent-hover);
     }
 
     /* Portrait Rotation Warning Overlay */
@@ -343,9 +526,9 @@
       position: fixed;
       inset: 0;
       z-index: 9999;
-      background: rgba(12, 11, 16, 0.97);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(9, 12, 18, 0.97);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       display: none;
       flex-direction: column;
       align-items: center;
@@ -394,17 +577,17 @@
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(20, 20, 28, 0.6) 65%, rgba(89, 185, 114, 0.28) 100%);
-      border: 2px solid rgba(140, 233, 154, 0.55);
-      box-shadow: 0 0 24px rgba(89, 185, 114, 0.28), inset 0 0 16px rgba(0, 0, 0, 0.5);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(15, 19, 28, 0.65) 65%, rgba(56, 193, 114, 0.28) 100%);
+      border: 2px solid rgba(134, 239, 172, 0.55);
+      box-shadow: 0 0 24px rgba(56, 193, 114, 0.28), inset 0 0 16px rgba(0, 0, 0, 0.5);
       position: relative;
     }
     #v-joystick-stick {
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #8ce99a 0%, #59b972 55%, #347a46 100%);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 10px rgba(140, 233, 154, 0.65);
+      background: radial-gradient(circle at 35% 35%, #86efac 0%, #38c172 55%, #237a46 100%);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 10px rgba(134, 239, 172, 0.65);
       border: 2px solid rgba(255, 255, 255, 0.8);
       position: absolute;
       left: 50%;
@@ -422,8 +605,8 @@
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: rgba(24, 22, 30, 0.82);
-      border: 1px solid var(--border);
+      background: rgba(15, 19, 28, 0.84);
+      border: 1px solid var(--border-strong);
       color: var(--text);
       display: none;
       align-items: center;
@@ -431,8 +614,8 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.15s, transform 0.1s;
@@ -448,72 +631,91 @@
     <div class="bar-group">
       <div class="brand">
         <img src="/favicon.png" alt="Brotato" />
-        <span>Brotato Web MP</span>
+        <span>Brotato Web</span>
       </div>
-      <span id="lan-ip-badge" class="badge" title="Share this URL with friends on your LAN">LAN: detecting...</span>
+      <span id="lan-ip-badge" class="badge" style="display:none;" title="Active multiplayer server">Relay</span>
       <span id="net-status-badge" class="badge">Offline / Solo</span>
-      <button id="copy-invite-btn" class="bar-btn" style="display:none;" onclick="copyInviteLink()">🔗 Copy Invite Link</button>
+      <button id="copy-invite-btn" class="bar-btn primary" style="display:none;" onclick="copyInviteLink()">🔗 Invite Link</button>
+      <button id="players-btn" class="bar-btn" style="display:none;" onclick="triggerOpenPlayerList()">👥 Players (<span id="roster-count-num">1</span>/4)</button>
     </div>
 
     <div class="bar-group">
-      <label style="font-size:12px;color:var(--muted);">Name:</label>
-      <input id="player-name-input" class="bar-input" type="text" maxlength="20" placeholder="Your Nickname" onchange="savePlayerName(this.value)" />
-      <button class="bar-btn primary" onclick="toggleDrawer('rooms-drawer')">🌐 Rooms / IP (<span id="room-count-num">0</span>)</button>
-      <button class="bar-btn" onclick="toggleDrawer('saves-drawer')">💾 Local Profile &amp; Unlocks</button>
-      <span id="save-status-badge" class="badge ok" title="Your profile and unlocks are automatically saved to this computer">Saved to PC ✓</span>
-      <button class="bar-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F11)">⛶ Fullscreen (F11)</button>
-      <button class="bar-btn" onclick="toggleTopbar(true)" title="Hide Top Bar (F2)">▲ Hide</button>
+      <div class="name-pill">
+        <label for="player-name-input">Name</label>
+        <input id="player-name-input" class="bar-input" type="text" maxlength="20" placeholder="Nickname" onchange="savePlayerName(this.value)" />
+      </div>
+      <button class="bar-btn primary" onclick="toggleDrawer('rooms-drawer')">🌐 Rooms (<span id="room-count-num">0</span>)</button>
+      <button class="bar-btn" onclick="toggleDrawer('saves-drawer')">💾 Saves</button>
+      <span id="save-status-badge" class="badge ok" title="Your profile and unlocks are automatically saved to this computer">Saved ✓</span>
+      <button class="bar-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F11)">⛶ F11</button>
+      <button class="bar-btn ghost" onclick="toggleTopbar(true)" title="Hide Top Bar (F2)">▲</button>
     </div>
   </div>
-  <button id="show-bar-pill" onclick="toggleTopbar(false)">▼ Menu / Rooms / Saves (F2)</button>
+  <button id="show-bar-pill" onclick="toggleTopbar(false)">▼ Menu (F2)</button>
 
-  <!-- Rooms & Direct IP Drawer -->
+  <!-- Rooms, Roster & Direct IP Drawer -->
   <div id="rooms-drawer" class="drawer">
     <h3>
-      <span>🌐 Online &amp; LAN Room Browser</span>
-      <button class="bar-btn" onclick="toggleDrawer('rooms-drawer')">✕</button>
+      <span>🌐 Online &amp; LAN Multiplayer</span>
+      <button class="bar-btn ghost" onclick="toggleDrawer('rooms-drawer')">✕</button>
     </h3>
-    <p>
-      You can use the <b>in-game Lobby Browser / Create Lobby</b> buttons on Brotato's title screen, or manage connections right here:
-    </p>
-    <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <button class="bar-btn primary" style="flex:1;" onclick="triggerHostRoom()">➕ Host New Room</button>
-      <button class="bar-btn" onclick="refreshRooms()">🔄 Refresh</button>
-    </div>
-    <div id="drawer-room-list" class="room-list">
-      <div style="color:var(--muted);text-align:center;padding:12px;">No active rooms found. Click "Host New Room" or "Create Lobby" in-game!</div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
-      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Cloud Relay Server URL (for Split Cloud Hosting)</div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <input id="relay-url-input" class="bar-input" style="flex:1;" type="text" placeholder="e.g. https://brotato-relay.onrender.com (blank = same host)" onchange="updateRelayServerUrl(this.value)" />
-        <button class="bar-btn" onclick="updateRelayServerUrl(document.getElementById('relay-url-input').value)">Save</button>
+
+    <!-- Live Room Roster (Shown while Hosting or Connected) -->
+    <div id="roster-section" class="section-card" style="display:none;">
+      <div class="section-title">
+        <span>👥 Players in Current Room</span>
+        <button class="bar-btn" style="padding:2px 8px;font-size:11px;" onclick="triggerOpenPlayerList()">In-Game View (Tab)</button>
       </div>
-      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Direct Connect (Server IP / Room Port)</div>
-      <div style="display:flex;gap:6px;">
-        <input id="target-server-input" class="bar-input" style="flex:1;" type="text" placeholder="Server IP (blank = active relay)" onchange="updateTargetServer(this.value)" />
-        <input id="target-port-input" class="bar-input" style="width:80px;" type="number" value="27462" placeholder="Port" />
-        <button class="bar-btn primary" onclick="triggerDirectJoin()">Join</button>
+      <div id="drawer-roster-list" class="room-list"></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">
+        <span>Active Rooms</span>
+        <div style="display:flex;gap:6px;">
+          <button class="bar-btn primary" style="padding:3px 9px;font-size:11.5px;" onclick="triggerHostRoom()">➕ Host Room</button>
+          <button class="bar-btn" style="padding:3px 8px;font-size:11.5px;" onclick="refreshRooms()">🔄</button>
+        </div>
+      </div>
+      <div id="drawer-room-list" class="room-list">
+        <div style="color:var(--muted);text-align:center;padding:14px;font-size:12px;">No active rooms found. Click "Host Room" or "Create Lobby" in-game!</div>
       </div>
     </div>
+
+    <details class="advanced-box">
+      <summary><span>⚙️ Direct Connect &amp; Custom Relay Server</span><span>▾</span></summary>
+      <div style="padding-top:10px;">
+        <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px;">Cloud Relay Server URL</div>
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+          <input id="relay-url-input" class="bar-input" style="flex:1;" type="text" placeholder="blank = current server" onchange="updateRelayServerUrl(this.value)" />
+          <button class="bar-btn" onclick="updateRelayServerUrl(document.getElementById('relay-url-input').value)">Save</button>
+        </div>
+        <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px;">Direct Connect (Server IP / Room Port)</div>
+        <div style="display:flex;gap:6px;">
+          <input id="target-server-input" class="bar-input" style="flex:1;" type="text" placeholder="Server IP (blank = active relay)" onchange="updateTargetServer(this.value)" />
+          <input id="target-port-input" class="bar-input" style="width:82px;" type="number" value="27462" placeholder="Port" />
+          <button class="bar-btn primary" onclick="triggerDirectJoin()">Join</button>
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- Local Profile & Save Manager Drawer -->
   <div id="saves-drawer" class="drawer">
     <h3>
-      <span>💾 Local Profile &amp; Unlocks (Saved on Your PC)</span>
-      <button class="bar-btn" onclick="toggleDrawer('saves-drawer')">✕</button>
+      <span>💾 Local Profile &amp; Unlocks</span>
+      <button class="bar-btn ghost" onclick="toggleDrawer('saves-drawer')">✕</button>
     </h3>
     <p id="save-details-text">
-      Your progress, unlocked characters, weapons, items, and settings are automatically saved in your browser's local storage &amp; IndexedDB on this computer.
+      Your progress, unlocked characters, weapons, items, and settings are automatically saved locally on this computer.
     </p>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <button class="bar-btn primary" onclick="exportRawProfileSave()">⬇️ Export Steam-Compatible Save (save_v3_0.json)</button>
-      <button class="bar-btn" onclick="exportFullSaveBundle()">📦 Export Full Profile &amp; Settings Backup (.json)</button>
-      <button class="bar-btn" onclick="document.getElementById('import-file-input').click()">📂 Import Save File from PC (save_v3_0.json or Backup)</button>
+      <button class="bar-btn primary" style="justify-content:center;padding:8px;" onclick="exportRawProfileSave()">⬇️ Export Steam Save (save_v3_0.json)</button>
+      <button class="bar-btn" style="justify-content:center;padding:8px;" onclick="exportFullSaveBundle()">📦 Export Full Profile &amp; Settings Backup</button>
+      <button class="bar-btn" style="justify-content:center;padding:8px;" onclick="document.getElementById('import-file-input').click()">📂 Import Save File from PC</button>
       <input id="import-file-input" type="file" accept=".json" style="display:none;" onchange="handleImportSaveFile(event)" />
       <hr style="border:none;border-top:1px solid var(--border);width:100%;margin:4px 0;" />
-      <button class="bar-btn" style="border-color:var(--warn);color:var(--warn);" onclick="triggerUnlockAll()">🔓 Unlock All Characters, Items &amp; Difficulties</button>
+      <button class="bar-btn" style="justify-content:center;padding:8px;border-color:rgba(245,185,66,0.45);color:var(--warn);" onclick="triggerUnlockAll()">🔓 Unlock All Characters, Items &amp; Difficulties</button>
     </div>
   </div>
 
@@ -521,7 +723,8 @@
   <div id="loading-overlay">
     <div id="loading-card">
       <img src="/favicon.png" alt="Brotato" />
-      <div id="loading-title">Brotato v1.2.0.1 + Multiplayer</div>
+      <div id="loading-title">Brotato Web Multiplayer</div>
+      <div id="loading-subtitle">v1.2.0.1 • All DLCs • Online Co-op</div>
       <div id="loading-status">Initializing WebAssembly Engine...</div>
       <div class="progress-track">
         <div id="progress-fill"></div>
@@ -671,26 +874,91 @@
       onTransportState: function (state, roomPort) {
         const badge = document.getElementById("net-status-badge");
         const inviteBtn = document.getElementById("copy-invite-btn");
+        const playersBtn = document.getElementById("players-btn");
+        const rosterSection = document.getElementById("roster-section");
         currentRoomPort = roomPort || 0;
         if (state === "hosting") {
           badge.className = "badge host";
-          badge.textContent = `Hosting Room #${roomPort}`;
-          inviteBtn.style.display = "inline-block";
+          badge.textContent = `Hosting #${roomPort}`;
+          inviteBtn.style.display = "inline-flex";
+          playersBtn.style.display = "inline-flex";
+          rosterSection.style.display = "block";
         } else if (state === "connected") {
           badge.className = "badge ok";
-          badge.textContent = `Connected to Room #${roomPort}`;
-          inviteBtn.style.display = "inline-block";
+          badge.textContent = `In Room #${roomPort}`;
+          inviteBtn.style.display = "inline-flex";
+          playersBtn.style.display = "inline-flex";
+          rosterSection.style.display = "block";
         } else if (state === "connecting") {
           badge.className = "badge";
-          badge.textContent = `Connecting to #${roomPort}...`;
+          badge.textContent = `Connecting #${roomPort}...`;
           inviteBtn.style.display = "none";
+          playersBtn.style.display = "none";
+          rosterSection.style.display = "none";
         } else {
           badge.className = "badge";
           badge.textContent = "Offline / Solo";
           inviteBtn.style.display = "none";
+          playersBtn.style.display = "none";
+          rosterSection.style.display = "none";
         }
       },
+      onRosterUpdate: function (jsonStr) {
+        try {
+          const data = JSON.parse(jsonStr);
+          const players = Array.isArray(data.players) ? data.players : [];
+          const isHost = Boolean(data.is_host);
+          const countEl = document.getElementById("roster-count-num");
+          if (countEl) countEl.textContent = String(players.length || 1);
+          const listEl = document.getElementById("drawer-roster-list");
+          if (!listEl) return;
+          if (players.length === 0) {
+            listEl.innerHTML = `<div style="color:var(--muted);text-align:center;padding:8px;font-size:12px;">Waiting for players...</div>`;
+            return;
+          }
+          listEl.innerHTML = players
+            .map((p) => {
+              const pNum = Number(p.player_index || 0) + 1;
+              const slotCls = `p${Math.min(4, Math.max(1, pNum))}`;
+              const roleTag = p.host
+                ? `<span style="color:#fde047;font-size:10.5px;font-weight:700;margin-left:6px;">HOST</span>`
+                : p.local
+                ? `<span style="color:#7dd3fc;font-size:10.5px;font-weight:700;margin-left:6px;">YOU</span>`
+                : "";
+              const pingText = p.local ? "Local" : Number(p.ping_ms) >= 0 ? `${p.ping_ms} ms` : "--";
+              const canKick = isHost && !p.local && p.can_kick && p.peer_key;
+              const kickBtn = canKick
+                ? `<button class="bar-btn danger" style="padding:3px 9px;font-size:11px;" onclick="triggerKickPlayer(${escapeHtml(JSON.stringify(String(p.peer_key)))}, ${escapeHtml(JSON.stringify(String(p.name || "Player")))})">Kick</button>`
+                : `<span style="color:var(--muted);font-size:11px;">${escapeHtml(pingText)}</span>`;
+              return `
+                <div class="room-row">
+                  <div style="display:flex;align-items:center;min-width:0;">
+                    <span class="slot-tag ${slotCls}">P${pNum}</span>
+                    <span style="font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(p.name || "Player " + pNum)}</span>
+                    ${roleTag}
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    ${canKick ? `<span style="color:var(--muted);font-size:11px;">${escapeHtml(pingText)}</span>` : ""}
+                    ${kickBtn}
+                  </div>
+                </div>`;
+            })
+            .join("");
+        } catch (_) {}
+      },
     };
+
+    function triggerOpenPlayerList() {
+      pendingActions.push({ action: "open_player_list" });
+      for (const el of document.querySelectorAll(".drawer")) el.classList.remove("open");
+      focusCanvas();
+    }
+
+    function triggerKickPlayer(peerKey, playerName) {
+      if (!confirm(`Kick ${playerName} from the room?`)) return;
+      pendingActions.push({ action: "kick_peer", peer_key: peerKey });
+      focusCanvas();
+    }
 
     function buildInviteUrl(customPort) {
       const port = Number(customPort) || currentRoomPort || 27462;
@@ -721,11 +989,11 @@
     function showInviteCopiedBadge() {
       const btn = document.getElementById("copy-invite-btn");
       if (!btn) return;
-      btn.style.display = "inline-block";
+      btn.style.display = "inline-flex";
       btn.textContent = "✅ Link Copied!";
       clearTimeout(window._inviteBtnResetTimer);
       window._inviteBtnResetTimer = setTimeout(() => {
-        btn.textContent = "🔗 Copy Invite Link";
+        btn.textContent = "🔗 Invite Link";
       }, 2200);
     }
 
@@ -1128,7 +1396,6 @@
       if (!isMobileDevice()) return;
       const rotatePrompt = document.getElementById("portrait-rotate-prompt");
       if (!rotatePrompt) return;
-      // In mobile, if height > width, user is holding device in portrait
       const isPortrait = window.innerHeight > window.innerWidth;
       rotatePrompt.style.display = isPortrait ? "flex" : "none";
     }
@@ -1152,7 +1419,7 @@
           await screen.orientation.lock("landscape").catch(() => {});
         }
       } catch (err) {
-        console.warn("Orientation lock error (may require physical device rotation on iOS):", err);
+        console.warn("Orientation lock error:", err);
       }
 
       const enterOverlay = document.getElementById("mobile-enter-overlay");
@@ -1186,7 +1453,6 @@
         if (enterOverlay && !document.fullscreenElement) {
           enterOverlay.style.display = "flex";
         }
-        // Auto-collapse topbar on mobile to maximize canvas viewport
         toggleTopbar(true);
       }
 
@@ -1196,7 +1462,6 @@
       });
       checkOrientation();
 
-      // Virtual gamepad emulation (provides full 360-degree analog precision to Godot)
       let virtualStickAxisX = 0;
       let virtualStickAxisY = 0;
       const virtualPad = {
@@ -1209,32 +1474,27 @@
         buttons: Array.from({ length: 16 }, () => ({ pressed: false, touched: false, value: 0 })),
       };
 
-      try {
-        const origGetGamepads = navigator.getGamepads ? navigator.getGamepads.bind(navigator) : null;
-        navigator.getGamepads = function () {
-          const pads = origGetGamepads ? Array.from(origGetGamepads() || []) : [];
-          if (pads.length === 0 || !pads[0]) {
-            virtualPad.axes[0] = virtualStickAxisX;
-            virtualPad.axes[1] = virtualStickAxisY;
-            virtualPad.timestamp = performance.now();
-            pads[0] = virtualPad;
-          }
-          return pads;
-        };
-      } catch (err) {
-        console.warn("Could not polyfill getGamepads, keyboard events will handle movement:", err);
+      if (onMobile) {
+        try {
+          const origGetGamepads = navigator.getGamepads ? navigator.getGamepads.bind(navigator) : null;
+          navigator.getGamepads = function () {
+            const pads = origGetGamepads ? Array.from(origGetGamepads() || []) : [];
+            if (pads.length === 0 || !pads[0]) {
+              virtualPad.axes[0] = virtualStickAxisX;
+              virtualPad.axes[1] = virtualStickAxisY;
+              virtualPad.timestamp = performance.now();
+              pads[0] = virtualPad;
+            }
+            return pads;
+          };
+        } catch (err) {
+          console.warn("Could not polyfill getGamepads:", err);
+        }
       }
 
-      // Keyboard movement state
       const activeKeys = {
-        KeyW: false,
-        KeyS: false,
-        KeyA: false,
-        KeyD: false,
-        ArrowUp: false,
-        ArrowDown: false,
-        ArrowLeft: false,
-        ArrowRight: false,
+        KeyW: false, KeyS: false, KeyA: false, KeyD: false,
+        ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
       };
 
       function dispatchKey(code, key, pressed) {
@@ -1243,10 +1503,7 @@
         const target = canvasEl || document.body;
         target.dispatchEvent(
           new KeyboardEvent(pressed ? "keydown" : "keyup", {
-            code: code,
-            key: key,
-            bubbles: true,
-            cancelable: true,
+            code: code, key: key, bubbles: true, cancelable: true,
           })
         );
       }
@@ -1268,21 +1525,16 @@
       let startX = 0;
       let startY = 0;
       let hasDragged = false;
-      const DRAG_THRESHOLD = 12; // Minimum distance (pixels) to distinguish drag from tap
-      const MAX_RADIUS = 48;     // Max joystick knob radius in pixels
+      const DRAG_THRESHOLD = 12;
+      const MAX_RADIUS = 48;
 
       function handleTouchStart(e) {
-        // Exclude touches on UI controls, overlays, or buttons
         if (e.target.closest("#topbar, .drawer, #mobile-pause-btn, #mobile-enter-overlay, #show-bar-pill")) {
           return;
         }
-
-        // Only handle one active joystick thumb at a time
         if (touchJoyId !== null) return;
-
         for (let i = 0; i < e.changedTouches.length; i++) {
           const t = e.changedTouches[i];
-          // Left 55% of the screen is the movement zone
           if (t.clientX < window.innerWidth * 0.55) {
             touchJoyId = t.identifier;
             startX = t.clientX;
@@ -1295,7 +1547,6 @@
 
       function handleTouchMove(e) {
         if (touchJoyId === null) return;
-
         let touch = null;
         for (let i = 0; i < e.changedTouches.length; i++) {
           if (e.changedTouches[i].identifier === touchJoyId) {
@@ -1304,48 +1555,38 @@
           }
         }
         if (!touch) return;
-
         const dx = touch.clientX - startX;
         const dy = touch.clientY - startY;
         const dist = Math.hypot(dx, dy);
 
-        if (!hasDragged) {
-          if (dist > DRAG_THRESHOLD) {
-            hasDragged = true;
-            if (joyEl) {
-              joyEl.style.left = startX + "px";
-              joyEl.style.top = startY + "px";
-              joyEl.classList.add("v-joystick-active");
-            }
+        if (!hasDragged && dist > DRAG_THRESHOLD) {
+          hasDragged = true;
+          if (joyEl) {
+            joyEl.style.left = startX + "px";
+            joyEl.style.top = startY + "px";
+            joyEl.classList.add("v-joystick-active");
           }
         }
 
         if (hasDragged) {
           if (e.cancelable) e.preventDefault();
-
           const clampedDist = Math.min(dist, MAX_RADIUS);
           const angle = Math.atan2(dy, dx);
           const stickX = Math.cos(angle) * clampedDist;
           const stickY = Math.sin(angle) * clampedDist;
-
           if (stickEl) {
             stickEl.style.transform = `translate(calc(-50% + ${stickX.toFixed(1)}px), calc(-50% + ${stickY.toFixed(1)}px))`;
           }
-
-          // Normalized analog vector
           const normX = dx / (dist || 1);
           const normY = dy / (dist || 1);
-
           virtualStickAxisX = stickX / MAX_RADIUS;
           virtualStickAxisY = stickY / MAX_RADIUS;
 
-          // 8-directional keyboard dispatch (WASD + Arrows)
           const deadzone = 0.35;
           const isUp = normY < -deadzone;
           const isDown = normY > deadzone;
           const isLeft = normX < -deadzone;
           const isRight = normX > deadzone;
-
           dispatchKey("KeyW", "w", isUp);
           dispatchKey("ArrowUp", "ArrowUp", isUp);
           dispatchKey("KeyS", "s", isDown);
@@ -1359,7 +1600,6 @@
 
       function handleTouchEnd(e) {
         if (touchJoyId === null) return;
-
         let found = false;
         for (let i = 0; i < e.changedTouches.length; i++) {
           if (e.changedTouches[i].identifier === touchJoyId) {
@@ -1368,13 +1608,11 @@
           }
         }
         if (!found) return;
-
         if (hasDragged) {
           releaseAllJoyKeys();
           if (joyEl) joyEl.classList.remove("v-joystick-active");
           if (stickEl) stickEl.style.transform = "translate(-50%, -50%)";
         }
-
         touchJoyId = null;
         hasDragged = false;
         focusCanvas();
