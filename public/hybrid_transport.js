@@ -831,6 +831,15 @@
     }
   }
 
+  BrotatoHybridSocket.CONNECTING = NativeWebSocket.CONNECTING;
+  BrotatoHybridSocket.OPEN = NativeWebSocket.OPEN;
+  BrotatoHybridSocket.CLOSING = NativeWebSocket.CLOSING;
+  BrotatoHybridSocket.CLOSED = NativeWebSocket.CLOSED;
+  BrotatoHybridSocket.prototype.CONNECTING = NativeWebSocket.CONNECTING;
+  BrotatoHybridSocket.prototype.OPEN = NativeWebSocket.OPEN;
+  BrotatoHybridSocket.prototype.CLOSING = NativeWebSocket.CLOSING;
+  BrotatoHybridSocket.prototype.CLOSED = NativeWebSocket.CLOSED;
+
   function HybridWebSocket(url, protocols) {
     try {
       const parsed = new URL(String(url), location.href);
@@ -846,7 +855,7 @@
   HybridWebSocket.OPEN = NativeWebSocket.OPEN;
   HybridWebSocket.CLOSING = NativeWebSocket.CLOSING;
   HybridWebSocket.CLOSED = NativeWebSocket.CLOSED;
-  HybridWebSocket.prototype = NativeWebSocket.prototype;
+  HybridWebSocket.prototype = BrotatoHybridSocket.prototype;
   window.WebSocket = HybridWebSocket;
 
   window.addEventListener("pagehide", () => {
