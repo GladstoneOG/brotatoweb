@@ -13,3 +13,11 @@ class_name = "BrotatoRelayHub"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["BrotatoRelayHub"]
+
+[[durable_objects.bindings]]
+name = "ROOM_DO"
+class_name = "BrotatoRoom"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["BrotatoRoom"]

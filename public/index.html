@@ -624,6 +624,31 @@
       transform: scale(0.94);
       background: rgba(255, 255, 255, 0.25);
     }
+    #migration-banner {
+      position: fixed;
+      top: 46px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 110;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(245, 185, 66, 0.6);
+      color: #fde68a;
+      font-size: 12.5px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #migration-banner.visible {
+      display: inline-flex;
+    }
   </style>
 </head>
 <body>
@@ -635,6 +660,7 @@
       </div>
       <span id="lan-ip-badge" class="badge" style="display:none;" title="Active multiplayer server">Relay</span>
       <span id="net-status-badge" class="badge">Offline / Solo</span>
+      <span id="transport-mode-badge" class="badge" style="display:none;" title="Active transport mode & saved wave checkpoint"></span>
       <button id="copy-invite-btn" class="bar-btn primary" style="display:none;" onclick="copyInviteLink()">🔗 Invite Link</button>
       <button id="players-btn" class="bar-btn" style="display:none;" onclick="triggerOpenPlayerList()">👥 Players (<span id="roster-count-num">1</span>/4)</button>
     </div>
@@ -652,6 +678,7 @@
     </div>
   </div>
   <button id="show-bar-pill" onclick="toggleTopbar(false)">▼ Menu (F2)</button>
+  <div id="migration-banner"></div>
 
   <!-- Rooms, Roster & Direct IP Drawer -->
   <div id="rooms-drawer" class="drawer">
@@ -775,6 +802,7 @@
   </div>
 
   <script src="/relay_config.js"></script>
+  <script src="/hybrid_transport.js"></script>
   <script src="/index.js"></script>
   <script>
     const SAVE_STORAGE_KEY = "brotato_web_save_bundle_v1";
@@ -858,8 +886,16 @@
           badge.textContent = `Saved to PC ✓ (P${Number(profileId) + 1}: ${charsCount} Chars, ${itemsCount} Items)`;
           document.getElementById("save-details-text").textContent =
             `Active Profile #${Number(profileId) + 1} — ${charsCount} Characters Unlocked, ${itemsCount} Items Unlocked. Automatically saved on this computer (${new Date().toLocaleTimeString()}).`;
+          if (window.BrotatoHybridTransport && typeof window.BrotatoHybridTransport.uploadCheckpoint === "function") {
+            window.BrotatoHybridTransport.uploadCheckpoint(jsonStr);
+          }
         } catch (e) {
           console.warn("Failed to write save bundle to localStorage:", e);
+        }
+      },
+      queueAction: function (cmd) {
+        if (cmd && typeof cmd === "object") {
+          pendingActions.push(cmd);
         }
       },
       consumePendingAction: function () {
@@ -901,6 +937,45 @@
           inviteBtn.style.display = "none";
           playersBtn.style.display = "none";
           rosterSection.style.display = "none";
+          const tmBadge = document.getElementById("transport-mode-badge");
+          if (tmBadge) tmBadge.style.display = "none";
+        }
+      },
+      onTransportMeta: function (meta) {
+        if (!meta || typeof meta !== "object") return;
+        const tmBadge = document.getElementById("transport-mode-badge");
+        if (tmBadge) {
+          if (meta.transportMode === "idle") {
+            tmBadge.style.display = "none";
+          } else {
+            tmBadge.style.display = "inline-flex";
+            const waveSuffix = Number(meta.checkpointWave) > 0 ? ` • 💾 W${meta.checkpointWave}` : "";
+            if (meta.transportMode === "p2p") {
+              tmBadge.className = "badge ok";
+              tmBadge.textContent = `⚡ P2P (${meta.p2pPeers})${waveSuffix}`;
+            } else if (meta.transportMode === "reconnecting") {
+              tmBadge.className = "badge host";
+              tmBadge.textContent = `🔄 Reconnecting${waveSuffix}`;
+            } else if (meta.transportMode === "migrating") {
+              tmBadge.className = "badge host";
+              tmBadge.textContent = `🔄 Migrating${waveSuffix}`;
+            } else {
+              tmBadge.className = "badge";
+              tmBadge.textContent = `☁️ Relay${waveSuffix}`;
+            }
+          }
+        }
+        if (meta.banner !== undefined) {
+          const bannerEl = document.getElementById("migration-banner");
+          if (bannerEl) {
+            if (meta.banner) {
+              bannerEl.textContent = meta.banner;
+              bannerEl.classList.add("visible");
+            } else {
+              bannerEl.textContent = "";
+              bannerEl.classList.remove("visible");
+            }
+          }
         }
       },
       onRosterUpdate: function (jsonStr) {
@@ -1118,10 +1193,16 @@
     }
 
     function toggleDrawer(id) {
+      let openedRooms = false;
       for (const el of document.querySelectorAll(".drawer")) {
-        if (el.id === id) el.classList.toggle("open");
-        else el.classList.remove("open");
+        if (el.id === id) {
+          const isOpen = el.classList.toggle("open");
+          if (id === "rooms-drawer" && isOpen) openedRooms = true;
+        } else {
+          el.classList.remove("open");
+        }
       }
+      if (openedRooms) refreshRooms();
     }
 
     function toggleTopbar(collapse) {
@@ -1227,7 +1308,12 @@
         .replace(/"/g, "&quot;");
     }
 
-    setInterval(refreshRooms, 2500);
+    setInterval(() => {
+      const drawer = document.getElementById("rooms-drawer");
+      if (drawer && drawer.classList.contains("open") && document.visibilityState === "visible") {
+        refreshRooms();
+      }
+    }, 8000);
     refreshRooms();
 
     // --- IndexedDB Persistent .pck Cache + Parallel Chunk Loader ---
@@ -1350,7 +1436,7 @@
           canvasResizePolicy: 2,
           executable: "index",
           experimentalVK: false,
-          fileSizes: { "index.pck": 283371625, "index.wasm": 17642812 },
+          fileSizes: { "index.pck": 283419895, "index.wasm": 17642812 },
           focusCanvas: true,
           gdnativeLibs: [],
           onExit: function () {
